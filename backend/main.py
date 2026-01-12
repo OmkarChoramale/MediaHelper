@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 import os
@@ -30,9 +31,9 @@ class DownloadRequest(BaseModel):
     playlist_end: Optional[int] = None
     title: Optional[str] = "Download" # Added for folder naming
 
-@app.get("/")
-def read_root():
-    return {"message": "Downify API is running"}
+# @app.get("/")
+# def read_root():
+#     return {"message": "Downify API is running"}
 
 @app.post("/api/extract")
 async def extract_info(request: DownloadRequest):
@@ -62,3 +63,22 @@ async def get_file(file_id: str):
         raise HTTPException(status_code=404, detail="File not found")
     
     return FileResponse(file_path, filename=os.path.basename(file_path))
+
+# Serve Frontend (Single-Service Mode)
+# Check multiple locations for the frontend build
+frontend_paths = [
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend", "dist"), # Docker/Root
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "dist"), # Local Dev (sibling)
+]
+
+frontend_dist = None
+for path in frontend_paths:
+    if os.path.exists(path):
+        frontend_dist = path
+        break
+
+if frontend_dist:
+    print(f"Mounting frontend from: {frontend_dist}")
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")
+else:
+    print("Frontend build not found. Running in API-only mode.")

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Download, Link, Loader2, CheckCircle2, AlertCircle, Youtube, Instagram, Twitter, Music, Video, FileDown, List, Check, Search, Play, X, Zap, Shield, Globe, Layers, Heart } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:8000';
 
 function formatSize(bytes) {
   if (!bytes) return '';
