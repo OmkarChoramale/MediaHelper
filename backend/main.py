@@ -35,6 +35,10 @@ class DownloadRequest(BaseModel):
 # def read_root():
 #     return {"message": "Downify API is running"}
 
+@app.get("/healthz")
+def health_check():
+    return {"status": "ok"}
+
 @app.post("/api/extract")
 async def extract_info(request: DownloadRequest):
     try:
