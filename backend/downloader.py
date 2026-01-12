@@ -149,8 +149,9 @@ class Downloader:
                 return {
                     "is_playlist": False,
                     "id": info.get('id'),
-                    "title": info.get('title'),
-                    "thumbnail": info.get('thumbnail'),
+                    "title": info.get('title') or 'Downify Media',
+                    "view_count": info.get('view_count'),
+                    "thumb": info.get('thumbnail'),
                     "duration": duration,
                     "platform": info.get('extractor_key'),
                     "sizes": sizes,
