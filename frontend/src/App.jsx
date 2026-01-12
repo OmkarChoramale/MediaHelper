@@ -381,69 +381,83 @@ export default function MediaDownloader() {
                 </div>
               </div>
 
-              {/* Media Preview (Interactive) */}
-              {activeData.mediaInfo && !activeData.mediaInfo.is_playlist && (
-                <div className="mb-8 bg-black/40 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative group">
-                  {/* Neon Glow Border */}
-                  <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10 group-hover:ring-white/30 transition-all pointer-events-none z-20"></div>
+              {/* Media Preview & Title Section */}
+              {activeData.mediaInfo && (
+                <div className="mb-8">
+                  {/* Prominent Title (Above Preview) */}
+                  <h2 className="text-2xl font-bold text-white mb-4 line-clamp-2 leading-tight drop-shadow-lg">
+                    {activeData.mediaInfo.title || 'Media Found'}
+                  </h2>
 
-                  {isPlaying ? (
-                    <div className="aspect-video w-full bg-black relative">
-                      {activeData.mediaInfo.platform === 'youtube' || platform === 'youtube' ? (
-                        <iframe
-                          src={`https://www.youtube.com/embed/${activeData.mediaInfo.id}?autoplay=1`}
-                          title="Preview"
-                          className="w-full h-full absolute inset-0"
-                          allow="autoplay; encrypted-media"
-                          allowFullScreen
-                        ></iframe>
-                      ) : activeData.mediaInfo.video_url ? (
-                        <video controls autoPlay src={activeData.mediaInfo.video_url} className="w-full h-full object-contain" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/50 bg-white/5">
-                          <div className="text-center">
-                            <Video size={48} className="mx-auto mb-2 opacity-50" />
-                            <p className="text-sm font-bold uppercase tracking-widest">Preview Mode</p>
+                  <div className="bg-black/40 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative group">
+                    {/* Neon Glow Border */}
+                    <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10 group-hover:ring-white/30 transition-all pointer-events-none z-20"></div>
+
+                    {isPlaying && activeData.mediaInfo.id ? (
+                      <div className="aspect-video w-full bg-black relative">
+                        {activeData.mediaInfo.platform === 'youtube' || platform === 'youtube' ? (
+                          <iframe
+                            src={`https://www.youtube.com/embed/${activeData.mediaInfo.id}?autoplay=1`}
+                            title="Preview"
+                            className="w-full h-full absolute inset-0"
+                            allow="autoplay; encrypted-media"
+                            allowFullScreen
+                          ></iframe>
+                        ) : activeData.mediaInfo.video_url ? (
+                          <video controls autoPlay src={activeData.mediaInfo.video_url} className="w-full h-full object-contain" />
+                        ) : (
+                          /* Fallback if playing but no URL */
+                          <div className="w-full h-full flex items-center justify-center text-white/50 bg-white/5">
+                            <div className="text-center">
+                              <AlertCircle size={48} className="mx-auto mb-2 opacity-50 text-yellow-500" />
+                              <p className="text-sm font-bold uppercase tracking-widest">Preview Unavailable</p>
+                              <p className="text-xs opacity-50 mt-1">Bot protection active. Download still works.</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => setIsPlaying(false)}
-                        className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white p-2 rounded-full hover:bg-black/80 transition-all z-30"
-                      >
-                        <X size={20} />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className={`relative aspect-video w-full ${!activeData.mediaInfo.is_playlist ? 'cursor-pointer group/preview' : ''}`} onClick={() => !activeData.mediaInfo.is_playlist && setIsPlaying(true)}>
-                      {activeData.mediaInfo.thumbnail ? (
-                        <img src={activeData.mediaInfo.thumbnail} alt="Ref" className={`w-full h-full object-cover ${!activeData.mediaInfo.is_playlist ? 'opacity-60 group-hover/preview:opacity-40' : 'opacity-80'} transition-all duration-500 scale-100 ${!activeData.mediaInfo.is_playlist ? 'group-hover/preview:scale-105' : ''}`} />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-black flex items-center justify-center">
-                          <Video className="text-white/20 w-16 h-16" />
-                        </div>
-                      )}
-
-                      {/* Play Button Overlay (Only for non-playlist) */}
-                      {!activeData.mediaInfo.is_playlist && (
-                        <div className="absolute inset-0 flex items-center justify-center z-10">
-                          <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)] group-hover/preview:scale-110 transition-all duration-300 group-hover/preview:bg-white/20">
-                            <Play className="fill-white text-white ml-1" size={32} />
+                        )}
+                        <button
+                          onClick={() => setIsPlaying(false)}
+                          className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white p-2 rounded-full hover:bg-black/80 transition-all z-30"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className={`relative aspect-video w-full ${!activeData.mediaInfo.is_playlist && activeData.mediaInfo.id ? 'cursor-pointer group/preview' : ''}`} onClick={() => !activeData.mediaInfo.is_playlist && activeData.mediaInfo.id && setIsPlaying(true)}>
+                        {activeData.mediaInfo.thumbnail ? (
+                          <img src={activeData.mediaInfo.thumbnail} alt="Ref" className={`w-full h-full object-cover ${!activeData.mediaInfo.is_playlist ? 'opacity-60 group-hover/preview:opacity-40' : 'opacity-80'} transition-all duration-500 scale-100 ${!activeData.mediaInfo.is_playlist ? 'group-hover/preview:scale-105' : ''}`} />
+                        ) : (
+                          // Fallback Placeholder when thumbnail is blocked
+                          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black flex items-center justify-center border-t border-white/5">
+                            <div className="text-center p-6">
+                              <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
+                                {activeData.mediaInfo.platform === 'youtube' ? <Youtube size={40} className="text-red-500" /> : <Video size={40} className="text-blue-500" />}
+                              </div>
+                              <p className="text-white/60 font-medium">Preview Hidden (Privacy/Bot Check)</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {/* Info Overlay */}
-                      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-                        <h3 className="font-bold text-xl text-white leading-tight mb-1 line-clamp-1 drop-shadow-md">{activeData.mediaInfo.title || 'Unknown Media'}</h3>
-                        <div className="flex items-center gap-3 text-xs font-bold text-blue-200 uppercase tracking-wider">
-                          <span className="bg-blue-600/30 px-2 py-0.5 rounded text-blue-100">{activeData.mediaInfo.platform}</span>
-                          {activeData.mediaInfo.duration && <span>{formatDuration(activeData.mediaInfo.duration)}</span>}
-                          {activeData.mediaInfo.is_playlist && <span className="bg-purple-600/30 px-2 py-0.5 rounded text-purple-100">PLAYLIST</span>}
+                        {/* Play Button Overlay (Only for non-playlist AND valid ID) */}
+                        {!activeData.mediaInfo.is_playlist && activeData.mediaInfo.id && (
+                          <div className="absolute inset-0 flex items-center justify-center z-10">
+                            <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)] group-hover/preview:scale-110 transition-all duration-300 group-hover/preview:bg-white/20">
+                              <Play className="fill-white text-white ml-1" size={32} />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Info Overlay (Simplified since Title is above) */}
+                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent flex justify-between items-end">
+                          <div className="flex items-center gap-2">
+                            <span className="bg-white/10 backdrop-blur-md border border-white/10 px-3 py-1 rounded-lg text-xs font-bold text-white uppercase">{activeData.mediaInfo.platform}</span>
+                            {activeData.mediaInfo.is_playlist && <span className="bg-purple-500/20 border border-purple-500/30 px-3 py-1 rounded-lg text-xs font-bold text-purple-200 uppercase">PLAYLIST</span>}
+                          </div>
+                          {activeData.mediaInfo.duration && <span className="font-mono text-xs font-bold text-white/60">{formatDuration(activeData.mediaInfo.duration)}</span>}
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -485,9 +499,9 @@ export default function MediaDownloader() {
                         }`}
                     >
                       <span className={`block text-sm font-bold ${(downloadType === 'video' ? quality : audioQuality) === q.value ? 'text-white' : 'text-white/60'}`}>{q.label}</span>
-                      {activeData.mediaInfo?.sizes?.[q.value] && (
-                        <span className={`text-[10px] font-medium block mt-0.5 ${(downloadType === 'video' ? quality : audioQuality) === q.value ? 'text-blue-200' : 'text-white/20'}`}>{formatSize(activeData.mediaInfo.sizes[q.value])}</span>
-                      )}
+                      <span className={`text-[10px] font-medium block mt-0.5 ${(downloadType === 'video' ? quality : audioQuality) === q.value ? 'text-blue-200' : 'text-white/20'}`}>
+                        {activeData.mediaInfo?.sizes?.[q.value] ? formatSize(activeData.mediaInfo.sizes[q.value]) : 'Size: TBD'}
+                      </span>
                       {(downloadType === 'video' ? quality : audioQuality) === q.value && (
                         <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_10px_#60a5fa]"></div>
                       )}
