@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Link, Loader2, CheckCircle2, AlertCircle, Youtube, Instagram, Twitter, Music, Video, FileDown, List, Check, Search, Play, X } from 'lucide-react';
+import { Download, Link, Loader2, CheckCircle2, AlertCircle, Youtube, Instagram, Twitter, Music, Video, FileDown, List, Check, Search, Play, X, Zap, Shield, Globe, Layers, Heart } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -27,6 +27,7 @@ export default function MediaDownloader() {
   const [fetchingInfo, setFetchingInfo] = useState(false);
   const [status, setStatus] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [showSupport, setShowSupport] = useState(false); // New state for Support Modal
   const [downloadLink, setDownloadLink] = useState(null);
 
   // Tab-specific state storage
@@ -72,12 +73,16 @@ export default function MediaDownloader() {
   };
 
   const videoQualities = [
+    { value: '144', label: '144p' },
+    { value: '240', label: '240p' },
+    { value: '360', label: '360p' },
     { value: '480', label: '480p' },
     { value: '720', label: '720p (HD)' },
     { value: '1080', label: '1080p (FHD)' },
     { value: '1440', label: '1440p (2K)' },
     { value: '2160', label: '2160p (4K)' },
-    { value: '3840', label: '3840p (UHD)' }
+    { value: '3840', label: '4K (UHD)' }, // Kept for legacy if 2160 fails? or maybe this is width based?
+    { value: '4320', label: '4320p (8K)' }
   ];
 
   const audioQualities = [
@@ -182,7 +187,8 @@ export default function MediaDownloader() {
         quality: downloadType === 'audio' ? audioQuality : quality,
         isPlaylist: effectivePlatform === 'playlist' || (activeData.mediaInfo?.is_playlist),
         playlist_start: (effectivePlatform === 'playlist' || activeData.mediaInfo?.is_playlist) && activeData.playlistStart ? parseInt(activeData.playlistStart) : null,
-        playlist_end: (effectivePlatform === 'playlist' || activeData.mediaInfo?.is_playlist) && activeData.playlistEnd ? parseInt(activeData.playlistEnd) : null
+        playlist_end: (effectivePlatform === 'playlist' || activeData.mediaInfo?.is_playlist) && activeData.playlistEnd ? parseInt(activeData.playlistEnd) : null,
+        title: activeData.mediaInfo?.title || 'Download'
       };
 
       const res = await fetch(`${API_BASE}/api/queue-download`, {
@@ -203,7 +209,13 @@ export default function MediaDownloader() {
           const data = await statusRes.json();
 
           if (data.status === 'processing') {
-            setStatus({ type: 'info', message: `Downloading... ${Math.round(data.progress)}%`, speed: data.speed, eta: data.eta });
+            setStatus({
+              type: 'info',
+              message: data.current_file ? `Downloading: ${data.current_file}` : `Downloading... ${Math.round(data.progress)}%`,
+              subMessage: data.playlist_index ? `File ${data.playlist_index} of ${data.playlist_total}` : null,
+              speed: data.speed,
+              eta: data.eta
+            });
             setProgress(data.progress);
           } else if (data.status === 'completed') {
             clearInterval(interval);
@@ -522,6 +534,10 @@ export default function MediaDownloader() {
                       </div>
                     </div>
 
+                    {/* Sub-message (Playlist info or Filename) */}
+                    {status?.message && <div className="text-xs text-white/60 mb-2 font-mono truncate">{status.message}</div>}
+                    {status?.subMessage && <div className="text-xs text-blue-300 mb-4 font-bold uppercase tracking-wider">{status.subMessage}</div>}
+
                     {/* The Bar */}
                     <div className="h-6 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 relative z-10 box-content p-1">
                       <div className="h-full rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 relative transition-all duration-300 ease-out shadow-[0_0_20px_rgba(59,130,246,0.5)]" style={{ width: `${Math.max(5, progress)}%` }}>
@@ -545,6 +561,11 @@ export default function MediaDownloader() {
                   </div>
                 )
               }
+
+              {/* Status Message (If not loading but has status) */}
+              {status && status.type === 'info' && !loading && (
+                <div className="mt-4 text-center text-white/60 animate-pulse">{status.message}</div>
+              )}
 
             </div>
           </div>
@@ -601,6 +622,78 @@ export default function MediaDownloader() {
           }
 
         </div>
+
+        {/* Features Section (New) */}
+        <div className="w-full max-w-6xl mt-24 mb-10 relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-white mb-4">Why Choose Downify?</h2>
+            <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Zap, title: "Lightning Fast", desc: "Optimized for maximum speed with smart concurrent downloading.", color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/20" },
+              { icon: Shield, title: "Secure & Clean", desc: "No ads, no trackers, just pure file delivery directly to you.", color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20" },
+              { icon: Globe, title: "Universal Support", desc: "Works seamlessly with YouTube, Instagram, and playlists.", color: "text-blue-400", bg: "bg-blue-400/10", border: "border-blue-400/20" },
+              { icon: Layers, title: "Smart Organization", desc: "Playlists are automatically organized into clean, named folders.", color: "text-purple-400", bg: "bg-purple-400/10", border: "border-purple-400/20" }
+            ].map((f, i) => (
+              <div key={i} className={`glass-panel p-6 rounded-2xl border ${f.border} hover:scale-105 transition-all duration-300 group hover:shadow-2xl`}>
+                <div className={`w-12 h-12 rounded-xl ${f.bg} flex items-center justify-center mb-4 group-hover:rotate-6 transition-transform`}>
+                  <f.icon className={f.color} size={24} />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">{f.title}</h3>
+                <p className="text-white/50 text-sm leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Support Me Section Trigger */}
+          <div className="flex justify-center mt-16 mb-8">
+            <button
+              onClick={() => setShowSupport(true)}
+              className="group relative px-8 py-4 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 rounded-full text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-3 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              <Heart className="animate-bounce" fill="white" size={24} />
+              <span>Support The Developer</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Support Modal */}
+        {showSupport && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowSupport(false)}></div>
+            <div className="bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-1 shadow-2xl max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-300">
+              <div className="absolute -top-12 -left-12 w-32 h-32 bg-purple-500/30 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-blue-500/30 rounded-full blur-3xl pointer-events-none"></div>
+
+              <div className="bg-[#111] rounded-[22px] p-8 text-center relative overflow-hidden">
+                <button onClick={() => setShowSupport(false)} className="absolute top-4 right-4 text-white/30 hover:text-white transition-colors">
+                  <X size={24} />
+                </button>
+
+                <div className="w-16 h-16 bg-gradient-to-tr from-pink-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-orange-500/20">
+                  <Heart fill="white" size={32} className="text-white animate-pulse" />
+                </div>
+
+                <h3 className="text-2xl font-bold text-white mb-2">Buy me a Coffee? ☕</h3>
+                <p className="text-white/60 mb-6 text-sm leading-relaxed">
+                  Developing Downify takes a lot of time and coffee! If you love using this tool, any support is incredibly appreciated. It helps keep the servers running and the updates coming!
+                </p>
+
+                <div className="relative group mx-auto w-64 h-64 bg-white/5 rounded-2xl p-3 border border-white/10 mb-6 hover:border-pink-500/50 transition-colors duration-500">
+                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <img src="/support_qr.jpg" alt="Support QR Code" className="w-full h-full object-cover rounded-xl relative z-10" />
+                </div>
+
+                <div className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-yellow-400 font-bold text-lg animate-pulse">
+                  Thank You for your Support! ❤️
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {
           status && (status.type === 'success' || status.type === 'error') && (

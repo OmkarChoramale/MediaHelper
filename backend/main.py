@@ -28,6 +28,7 @@ class DownloadRequest(BaseModel):
     isPlaylist: bool = False
     playlist_start: Optional[int] = None
     playlist_end: Optional[int] = None
+    title: Optional[str] = "Download" # Added for folder naming
 
 @app.get("/")
 def read_root():
